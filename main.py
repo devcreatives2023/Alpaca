@@ -1,5 +1,6 @@
 from peft import PeftModel
 from transformers import LLaMATokenizer, LLaMAForCausalLM, GenerationConfig
+from pydantic import BaseModel
 
 tokenizer = LLaMATokenizer.from_pretrained("decapoda-research/llama-7b-hf")
 model = LLaMAForCausalLM.from_pretrained(
@@ -11,7 +12,8 @@ model = PeftModel.from_pretrained(model, "tloen/alpaca-lora-7b")
 
 
 class Item(BaseModel):
-    image: str
+    instruction: str
+    input_text: str
 
 # Init model, transforms
 
@@ -43,7 +45,10 @@ generation_config = GenerationConfig(
 
 
 
-def predict(instruction, input_text=None):
+def predict(item, run_id, logger):
+    item = Item(**item)
+    instruction = item.instruction
+    input_text = item.instruction
     prompt = generate_prompt(instruction, input_text)
     inputs = tokenizer(prompt, return_tensors="pt")
     input_ids = inputs["input_ids"].cuda()
